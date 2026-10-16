@@ -37,6 +37,12 @@
     <section class="form">
       <label for="amount">จำนวน (ETH)</label>
       <input id="amount" type="text" inputmode="decimal" placeholder="เช่น 0.01" autocomplete="off">
+      <div class="all-actions">
+        <p>ทำรายการทั้งหมด <span>ต้องยืนยันก่อนส่งรายการ</span></p>
+        <div class="row">
+          <button id="withdrawAllBtn" class="act all-button" type="button" disabled>ถอนทั้งหมด</button>
+        </div>
+      </div>
       <div class="row">
         <button id="depositBtn" class="act primary" disabled>ฝาก</button>
         <button id="withdrawBtn" class="act dark" disabled>ถอน</button>
@@ -47,6 +53,19 @@
       <h2>ประวัติการใช้งาน</h2>
       <ul id="log"><li class="info">เชื่อมต่อ MetaMask เพื่อเริ่มใช้งาน</li></ul>
     </section>
+
+    <dialog id="confirmDialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+      <div class="confirm-content">
+        <span class="confirm-eyebrow">ยืนยันรายการ</span>
+        <h2 id="confirmTitle">ทำรายการทั้งหมด?</h2>
+        <p id="confirmMessage"></p>
+        <p class="confirm-amount"><b id="confirmAmount"></b> ETH</p>
+        <div class="row">
+          <button id="cancelAllBtn" class="ghost" type="button">ยกเลิก</button>
+          <button id="confirmAllBtn" class="primary" type="button">ยืนยันและดำเนินการ</button>
+        </div>
+      </div>
+    </dialog>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>

@@ -77,6 +77,8 @@ const CONTRACT_ABI = [
 const NETWORKS = {1:"Ethereum Mainnet",11155111:"Sepolia",17000:"Holesky",5:"Goerli",1337:"Local",31337:"Hardhat"};
 
 let web3, bank, account, subs = [];
+let pendingBulk = null;
+let transactionInProgress = false;
 const $ = id => document.getElementById(id);
 
 function log(msg, type = "info") {
@@ -120,9 +122,10 @@ async function checkBalance() {
   }
 }
 
-async function transact(label, buildTx, extra) {
+async function transact(label, buildTx, extra, amountWei) {
   try {
-    const wei = readAmountWei();
+    const wei = amountWei || readAmountWei();
+    transactionInProgress = true;
     setButtons(false);
     log(`${label}: รอยืนยันในกระเป๋า...`);
     const rc = await buildTx(wei).send({ from: account, ...extra(wei) });
@@ -133,12 +136,53 @@ async function transact(label, buildTx, extra) {
   } catch (e) {
     log(`${label}ไม่สำเร็จ: ${errText(e)}`, "error");
   } finally {
+    transactionInProgress = false;
     setButtons(!!account);
   }
 }
 
 const deposit = () => transact("ฝาก", () => bank.methods.deposit(), wei => ({ value: wei }));
 const withdraw = () => transact("ถอน", wei => bank.methods.withdraw(wei), () => ({}));
+
+async function prepareWithdrawAll() {
+  if (!account || !bank) return;
+  const owner = account;
+  setButtons(false);
+
+  try {
+    const wei = await bank.methods.checkBalance().call({ from: owner });
+    if (new web3.utils.BN(wei).isZero()) {
+      throw new Error("ไม่มียอด ETH ใน BankBoo ให้ถอน");
+    }
+
+    if (account !== owner) throw new Error("บัญชีกระเป๋าเปลี่ยนระหว่างเตรียมรายการ กรุณาลองอีกครั้ง");
+
+    pendingBulk = {
+      label: "ถอนทั้งหมด",
+      wei,
+      buildTx: amount => bank.methods.withdraw(amount),
+      extra: () => ({})
+    };
+    $("confirmTitle").textContent = "ถอนยอดทั้งหมด?";
+    $("confirmMessage").textContent =
+      "ระบบจะถอนยอด ETH ทั้งหมดที่ฝากไว้ใน BankBoo เข้ากระเป๋าที่เชื่อมต่อ ตรวจสอบจำนวนแล้วกดยืนยันอีกครั้งเพื่อส่งรายการ";
+    $("confirmAmount").textContent = web3.utils.fromWei(wei, "ether");
+    $("confirmAllBtn").textContent = "ยืนยันถอนทั้งหมด";
+    $("confirmDialog").showModal();
+  } catch (e) {
+    pendingBulk = null;
+    log(`ถอนทั้งหมดไม่สำเร็จ: ${errText(e)}`, "error");
+    setButtons(!!account);
+  }
+}
+
+function confirmAllTransaction() {
+  if (!pendingBulk) return;
+  const { label, wei, buildTx, extra } = pendingBulk;
+  pendingBulk = null;
+  $("confirmDialog").close();
+  transact(label, buildTx, extra, wei);
+}
 
 function listenEvents() {
   subs.forEach(s => s.unsubscribe && s.unsubscribe());
@@ -186,6 +230,8 @@ if (window.ethereum) {
   window.ethereum.on("accountsChanged", async accs => {
     if (!accs.length) {
       account = null; setButtons(false);
+      pendingBulk = null;
+      if ($("confirmDialog").open) $("confirmDialog").close();
       $("accountText").textContent = "ยังไม่เชื่อมต่อ";
       $("vaultBalance").textContent = "-";
       $("connectBtn").textContent = "เชื่อมต่อ MetaMask";
@@ -193,6 +239,8 @@ if (window.ethereum) {
       return;
     }
     account = accs[0];
+    pendingBulk = null;
+    if ($("confirmDialog").open) $("confirmDialog").close();
     log("เปลี่ยนบัญชีเป็น " + short(account), "info");
     await updateWallet();
     if (bank) { await checkBalance(); listenEvents(); }
@@ -203,4 +251,14 @@ if (window.ethereum) {
 $("connectBtn").addEventListener("click", connect);
 $("depositBtn").addEventListener("click", deposit);
 $("withdrawBtn").addEventListener("click", withdraw);
+$("withdrawAllBtn").addEventListener("click", prepareWithdrawAll);
+$("confirmAllBtn").addEventListener("click", confirmAllTransaction);
+$("cancelAllBtn").addEventListener("click", () => $("confirmDialog").close());
+$("confirmDialog").addEventListener("close", () => {
+  if (pendingBulk) {
+    log(`ยกเลิก${pendingBulk.label}`, "info");
+    pendingBulk = null;
+  }
+  if (!transactionInProgress) setButtons(!!account);
+});
 $("checkBtn").addEventListener("click", checkBalance);

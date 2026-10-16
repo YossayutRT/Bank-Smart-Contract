@@ -243,6 +243,47 @@ input:focus-visible {
   padding: 20px 22px;
 }
 
+.all-actions {
+  margin: 0 0 16px;
+  border: 1px solid #e8ece7;
+  border-radius: 10px;
+  padding: 12px;
+  background: #f8faf7;
+}
+
+.all-actions .row {
+  grid-template-columns: 1fr;
+}
+
+.all-actions > p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 9px;
+  color: var(--ink);
+  font-size: .88rem;
+  font-weight: 500;
+}
+
+.all-actions > p span {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 400;
+  text-align: right;
+}
+
+.all-button {
+  border-color: #cbd8d2;
+  background: #fff;
+  color: var(--teal);
+  font-size: .9rem;
+}
+
+.all-button:not(:disabled):hover {
+  border-color: var(--teal);
+  background: #f1f7f4;
+}
+
 label {
   display: block;
   margin-bottom: 7px;
@@ -304,6 +345,64 @@ input:focus {
   color: var(--muted);
 }
 
+dialog {
+  width: min(100% - 32px, 430px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 0;
+  background: var(--card);
+  box-shadow: 0 24px 80px rgb(10 31 27 / 24%);
+  color: var(--ink);
+}
+
+dialog::backdrop {
+  background: rgb(15 35 32 / 52%);
+  backdrop-filter: blur(3px);
+}
+
+.confirm-content {
+  padding: 24px;
+}
+
+.confirm-eyebrow {
+  color: var(--teal);
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.confirm-content h2 {
+  margin: 4px 0 8px;
+  font-size: 1.35rem;
+}
+
+.confirm-content > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .92rem;
+}
+
+.confirm-content .confirm-amount {
+  margin: 16px 0 20px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #f4f7f3;
+  color: var(--ink);
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.confirm-content .row {
+  grid-template-columns: minmax(0, .75fr) minmax(0, 1.5fr);
+}
+
+.confirm-content .row button {
+  padding-right: 10px;
+  padding-left: 10px;
+  font-size: .9rem;
+}
+
 @media (max-width: 480px) {
   main {
     width: min(100% - 24px, 640px);
@@ -327,6 +426,23 @@ input:focus {
   .form {
     padding-right: 18px;
     padding-left: 18px;
+  }
+
+  .all-actions {
+    padding: 10px;
+  }
+
+  .all-actions > p {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .all-actions > p span {
+    text-align: left;
+  }
+
+  .confirm-content {
+    padding: 20px;
   }
 }
 
